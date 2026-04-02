@@ -1,0 +1,64 @@
+'use client'
+
+import { useTransition } from 'react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
+import { MoreHorizontal } from 'lucide-react'
+import { adminUpdateRiskStatus } from '@/lib/admin/actions'
+
+type RiskStatus = 'open' | 'investigating' | 'resolved' | 'dismissed'
+
+interface RiskLogActionsProps {
+  logId: string
+  currentStatus: RiskStatus
+}
+
+export function RiskLogActions({ logId, currentStatus }: RiskLogActionsProps) {
+  const [isPending, startTransition] = useTransition()
+
+  function update(status: RiskStatus) {
+    startTransition(async () => {
+      await adminUpdateRiskStatus(logId, status)
+    })
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" disabled={isPending}>
+          <MoreHorizontal className="h-4 w-4" />
+          <span className="sr-only">Open menu</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {currentStatus === 'open' && (
+          <DropdownMenuItem onClick={() => update('investigating')}>
+            Start investigation
+          </DropdownMenuItem>
+        )}
+        {currentStatus !== 'open' && currentStatus !== 'resolved' && currentStatus !== 'dismissed' && (
+          <DropdownMenuItem onClick={() => update('open')}>
+            Reopen
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuSeparator />
+        {currentStatus !== 'resolved' && (
+          <DropdownMenuItem onClick={() => update('resolved')}>
+            Mark resolved
+          </DropdownMenuItem>
+        )}
+        {currentStatus !== 'dismissed' && (
+          <DropdownMenuItem onClick={() => update('dismissed')}>
+            Dismiss
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}

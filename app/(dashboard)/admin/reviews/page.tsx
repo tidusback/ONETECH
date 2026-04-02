@@ -1,34 +1,15 @@
 import type { Metadata } from 'next'
-import { Star, MoreHorizontal } from 'lucide-react'
+import { Star } from 'lucide-react'
 import { PageContainer } from '@/components/shared/page-container'
 import { PageHeader } from '@/components/shared/page-header'
 import { EmptyState } from '@/components/shared/empty-state'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { formatDate } from '@/lib/utils'
-import { cn } from '@/lib/utils'
+import { formatDate, cn } from '@/lib/utils'
+import { getReviews } from '@/lib/admin/queries'
+import { ReviewActions } from './review-actions'
 
 export const metadata: Metadata = { title: 'Reviews' }
-
-// TODO: add migration for `reviews` table, then replace this with a real query
-type Review = {
-  id: string
-  rating: number
-  comment: string | null
-  is_published: boolean
-  created_at: string
-  customer_name: string | null
-  customer_email: string
-  technician_name: string | null
-}
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -44,11 +25,6 @@ function StarRating({ rating }: { rating: number }) {
       ))}
     </div>
   )
-}
-
-async function getReviews(): Promise<Review[]> {
-  // Stub: reviews table migration pending
-  return []
 }
 
 export default async function AdminReviewsPage() {
@@ -73,7 +49,6 @@ export default async function AdminReviewsPage() {
         }
       />
 
-      {/* Stats */}
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="rounded-lg border border-border bg-card p-3 text-center">
           <p className="text-lg font-bold tabular-nums">{reviews.length}</p>
@@ -140,26 +115,7 @@ export default async function AdminReviewsPage() {
                     </div>
                   </div>
 
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 shrink-0 p-0">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Open menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {review.is_published ? (
-                        <DropdownMenuItem>Unpublish</DropdownMenuItem>
-                      ) : (
-                        <DropdownMenuItem>Publish</DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem>View job</DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive focus:text-destructive">
-                        Delete review
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <ReviewActions reviewId={review.id} isPublished={review.is_published} />
                 </div>
               ))}
             </div>

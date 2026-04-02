@@ -1,35 +1,18 @@
 import type { Metadata } from 'next'
-import { LifeBuoy, MoreHorizontal } from 'lucide-react'
+import { LifeBuoy } from 'lucide-react'
 import { PageContainer } from '@/components/shared/page-container'
 import { PageHeader } from '@/components/shared/page-header'
 import { EmptyState } from '@/components/shared/empty-state'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { formatDate } from '@/lib/utils'
+import { getSupportTickets } from '@/lib/admin/queries'
+import { TicketActions } from './ticket-actions'
 
 export const metadata: Metadata = { title: 'Support Tickets' }
 
-// TODO: add migration for `support_tickets` table, then replace with a real query
 type TicketStatus   = 'open' | 'in_progress' | 'waiting_customer' | 'resolved' | 'closed'
 type TicketPriority = 'low' | 'medium' | 'high' | 'urgent'
-
-type SupportTicket = {
-  id: string
-  ticket_number: string
-  subject: string
-  status: TicketStatus
-  priority: TicketPriority
-  created_at: string
-  customer_name: string | null
-  customer_email: string
-}
 
 const statusVariant: Record<TicketStatus, 'warning' | 'default' | 'neutral' | 'profit' | 'secondary'> = {
   open:             'warning',
@@ -44,11 +27,6 @@ const priorityVariant: Record<TicketPriority, 'destructive' | 'warning' | 'neutr
   high:   'warning',
   medium: 'neutral',
   low:    'secondary',
-}
-
-async function getSupportTickets(): Promise<SupportTicket[]> {
-  // Stub: support_tickets table migration pending
-  return []
 }
 
 export default async function AdminSupportPage() {
@@ -73,7 +51,6 @@ export default async function AdminSupportPage() {
         }
       />
 
-      {/* Status strip */}
       {tickets.length > 0 && (
         <div className="mb-6 grid grid-cols-3 gap-3 sm:grid-cols-5">
           {(['open', 'in_progress', 'waiting_customer', 'resolved', 'closed'] as TicketStatus[]).map(
@@ -134,21 +111,7 @@ export default async function AdminSupportPage() {
                     </div>
                   </div>
 
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Open menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>View ticket</DropdownMenuItem>
-                      <DropdownMenuItem>Assign to agent</DropdownMenuItem>
-                      <DropdownMenuItem>Mark in progress</DropdownMenuItem>
-                      <DropdownMenuItem>Mark resolved</DropdownMenuItem>
-                      <DropdownMenuItem>Close ticket</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <TicketActions ticketId={ticket.id} currentStatus={ticket.status} />
                 </div>
               ))}
             </div>

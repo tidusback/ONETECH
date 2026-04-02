@@ -157,3 +157,192 @@ export async function getApprovedTechnicianProfiles(): Promise<
     .map((r) => r.profiles)
     .filter((p): p is { id: string; full_name: string | null; email: string } => p !== null)
 }
+
+// ---------------------------------------------------------------------------
+// Support Tickets
+// ---------------------------------------------------------------------------
+
+export interface AdminSupportTicket {
+  id: string
+  ticket_number: string
+  subject: string
+  status: 'open' | 'in_progress' | 'waiting_customer' | 'resolved' | 'closed'
+  priority: 'low' | 'medium' | 'high' | 'urgent'
+  created_at: string
+  customer_name: string | null
+  customer_email: string
+  assigned_to: string | null
+}
+
+export async function getSupportTickets(): Promise<AdminSupportTicket[]> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('support_tickets')
+    .select('id, ticket_number, subject, status, priority, created_at, assigned_to, user:profiles!user_id(full_name, email)')
+    .order('created_at', { ascending: false })
+    .limit(500)
+
+  type Row = {
+    id: string
+    ticket_number: string
+    subject: string
+    status: AdminSupportTicket['status']
+    priority: AdminSupportTicket['priority']
+    created_at: string
+    assigned_to: string | null
+    user: { full_name: string | null; email: string } | null
+  }
+
+  return ((data ?? []) as unknown as Row[]).map((r) => ({
+    id:             r.id,
+    ticket_number:  r.ticket_number,
+    subject:        r.subject,
+    status:         r.status,
+    priority:       r.priority,
+    created_at:     r.created_at,
+    assigned_to:    r.assigned_to,
+    customer_name:  r.user?.full_name ?? null,
+    customer_email: r.user?.email ?? '',
+  }))
+}
+
+// ---------------------------------------------------------------------------
+// Risk Logs
+// ---------------------------------------------------------------------------
+
+export interface AdminRiskLog {
+  id: string
+  event_type: string
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  status: 'open' | 'investigating' | 'resolved' | 'dismissed'
+  description: string
+  created_at: string
+  resolved_at: string | null
+  actor_name: string | null
+  actor_email: string | null
+}
+
+export async function getRiskLogs(): Promise<AdminRiskLog[]> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('risk_logs')
+    .select('id, event_type, severity, status, description, created_at, resolved_at, actor:profiles!actor_id(full_name, email)')
+    .order('created_at', { ascending: false })
+    .limit(500)
+
+  type Row = {
+    id: string
+    event_type: string
+    severity: AdminRiskLog['severity']
+    status: AdminRiskLog['status']
+    description: string
+    created_at: string
+    resolved_at: string | null
+    actor: { full_name: string | null; email: string } | null
+  }
+
+  return ((data ?? []) as unknown as Row[]).map((r) => ({
+    id:           r.id,
+    event_type:   r.event_type,
+    severity:     r.severity,
+    status:       r.status,
+    description:  r.description,
+    created_at:   r.created_at,
+    resolved_at:  r.resolved_at,
+    actor_name:   r.actor?.full_name ?? null,
+    actor_email:  r.actor?.email ?? null,
+  }))
+}
+
+// ---------------------------------------------------------------------------
+// Reviews
+// ---------------------------------------------------------------------------
+
+export interface AdminReview {
+  id: string
+  rating: number
+  comment: string | null
+  is_published: boolean
+  created_at: string
+  customer_name: string | null
+  customer_email: string
+  technician_name: string | null
+}
+
+export async function getReviews(): Promise<AdminReview[]> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('reviews')
+    .select('id, rating, comment, is_published, created_at, customer:profiles!user_id(full_name, email), technician:profiles!technician_id(full_name)')
+    .order('created_at', { ascending: false })
+    .limit(500)
+
+  type Row = {
+    id: string
+    rating: number
+    comment: string | null
+    is_published: boolean
+    created_at: string
+    customer: { full_name: string | null; email: string } | null
+    technician: { full_name: string | null } | null
+  }
+
+  return ((data ?? []) as unknown as Row[]).map((r) => ({
+    id:               r.id,
+    rating:           r.rating,
+    comment:          r.comment,
+    is_published:     r.is_published,
+    created_at:       r.created_at,
+    customer_name:    r.customer?.full_name ?? null,
+    customer_email:   r.customer?.email ?? '',
+    technician_name:  r.technician?.full_name ?? null,
+  }))
+}
+
+// ---------------------------------------------------------------------------
+// Custom Requests
+// ---------------------------------------------------------------------------
+
+export interface AdminCustomRequest {
+  id: string
+  request_number: string
+  title: string
+  description: string | null
+  status: 'new' | 'reviewing' | 'quoted' | 'accepted' | 'declined' | 'completed'
+  budget: number | null
+  created_at: string
+  customer_name: string | null
+  customer_email: string
+}
+
+export async function getCustomRequests(): Promise<AdminCustomRequest[]> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('custom_requests')
+    .select('id, request_number, title, description, status, budget, created_at, customer:profiles!user_id(full_name, email)')
+    .order('created_at', { ascending: false })
+    .limit(500)
+
+  type Row = {
+    id: string
+    request_number: string
+    title: string
+    description: string | null
+    status: AdminCustomRequest['status']
+    budget: number | null
+    created_at: string
+    customer: { full_name: string | null; email: string } | null
+  }
+
+  return ((data ?? []) as unknown as Row[]).map((r) => ({
+    id:             r.id,
+    request_number: r.request_number,
+    title:          r.title,
+    description:    r.description,
+    status:         r.status,
+    budget:         r.budget,
+    created_at:     r.created_at,
+    customer_name:  r.customer?.full_name ?? null,
+    customer_email: r.customer?.email ?? '',
+  }))
+}

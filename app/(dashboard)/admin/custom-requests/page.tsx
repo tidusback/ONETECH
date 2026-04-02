@@ -1,36 +1,17 @@
 import type { Metadata } from 'next'
-import { FileText, MoreHorizontal } from 'lucide-react'
+import { FileText } from 'lucide-react'
 import { PageContainer } from '@/components/shared/page-container'
 import { PageHeader } from '@/components/shared/page-header'
 import { EmptyState } from '@/components/shared/empty-state'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { formatDate } from '@/lib/utils'
+import { getCustomRequests } from '@/lib/admin/queries'
+import { RequestActions } from './request-actions'
 
 export const metadata: Metadata = { title: 'Custom Requests' }
 
-// TODO: add migration for `custom_requests` table, then replace with a real query
 type CustomRequestStatus = 'new' | 'reviewing' | 'quoted' | 'accepted' | 'declined' | 'completed'
-
-type CustomRequest = {
-  id: string
-  request_number: string
-  title: string
-  description: string | null
-  status: CustomRequestStatus
-  budget: number | null
-  created_at: string
-  customer_name: string | null
-  customer_email: string
-}
 
 const statusVariant: Record<
   CustomRequestStatus,
@@ -42,11 +23,6 @@ const statusVariant: Record<
   accepted:  'profit',
   declined:  'destructive',
   completed: 'secondary',
-}
-
-async function getCustomRequests(): Promise<CustomRequest[]> {
-  // Stub: custom_requests table migration pending
-  return []
 }
 
 export default async function AdminCustomRequestsPage() {
@@ -71,7 +47,6 @@ export default async function AdminCustomRequestsPage() {
         }
       />
 
-      {/* Status strip */}
       {requests.length > 0 && (
         <div className="mb-6 grid grid-cols-3 gap-3 sm:grid-cols-6">
           {(['new', 'reviewing', 'quoted', 'accepted', 'declined', 'completed'] as CustomRequestStatus[]).map(
@@ -133,23 +108,7 @@ export default async function AdminCustomRequestsPage() {
                     </div>
                   </div>
 
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Open menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>View request</DropdownMenuItem>
-                      <DropdownMenuItem>Mark reviewing</DropdownMenuItem>
-                      <DropdownMenuItem>Send quote</DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive focus:text-destructive">
-                        Decline
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <RequestActions requestId={req.id} currentStatus={req.status} />
                 </div>
               ))}
             </div>

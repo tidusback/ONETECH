@@ -243,3 +243,114 @@ export async function adminDeleteCategory(id: string): Promise<{ error: string |
   revalidatePath('/admin/diagnosis')
   return { error: null }
 }
+
+// ---------------------------------------------------------------------------
+// Support Tickets
+// ---------------------------------------------------------------------------
+
+export async function adminUpdateTicketStatus(
+  ticketId: string,
+  status: 'open' | 'in_progress' | 'waiting_customer' | 'resolved' | 'closed',
+): Promise<{ error: string | null }> {
+  await ensureAdmin()
+  const supabase = await createClient()
+
+  const updates: Record<string, unknown> = { status }
+  if (status === 'resolved' || status === 'closed') {
+    updates.resolved_at = new Date().toISOString()
+  }
+
+  const { error } = await supabase
+    .from('support_tickets')
+    .update(updates)
+    .eq('id', ticketId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/admin/support')
+  return { error: null }
+}
+
+// ---------------------------------------------------------------------------
+// Risk Logs
+// ---------------------------------------------------------------------------
+
+export async function adminUpdateRiskStatus(
+  logId: string,
+  status: 'open' | 'investigating' | 'resolved' | 'dismissed',
+): Promise<{ error: string | null }> {
+  const admin = await ensureAdmin()
+  const supabase = await createClient()
+
+  const updates: Record<string, unknown> = { status }
+  if (status === 'resolved' || status === 'dismissed') {
+    updates.resolved_at = new Date().toISOString()
+    updates.resolved_by = admin.id
+  }
+
+  const { error } = await supabase
+    .from('risk_logs')
+    .update(updates)
+    .eq('id', logId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/admin/risk-logs')
+  return { error: null }
+}
+
+// ---------------------------------------------------------------------------
+// Reviews
+// ---------------------------------------------------------------------------
+
+export async function adminToggleReviewPublished(
+  reviewId: string,
+  isPublished: boolean,
+): Promise<{ error: string | null }> {
+  await ensureAdmin()
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('reviews')
+    .update({ is_published: isPublished })
+    .eq('id', reviewId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/admin/reviews')
+  return { error: null }
+}
+
+export async function adminDeleteReview(
+  reviewId: string,
+): Promise<{ error: string | null }> {
+  await ensureAdmin()
+  const supabase = await createClient()
+
+  const { error } = await supabase.from('reviews').delete().eq('id', reviewId)
+  if (error) return { error: error.message }
+  revalidatePath('/admin/reviews')
+  return { error: null }
+}
+
+// ---------------------------------------------------------------------------
+// Custom Requests
+// ---------------------------------------------------------------------------
+
+export async function adminUpdateCustomRequestStatus(
+  requestId: string,
+  status: 'new' | 'reviewing' | 'quoted' | 'accepted' | 'declined' | 'completed',
+  adminNotes?: string,
+): Promise<{ error: string | null }> {
+  await ensureAdmin()
+  const supabase = await createClient()
+
+  const updates: Record<string, unknown> = { status }
+  if (adminNotes !== undefined) updates.admin_notes = adminNotes.trim() || null
+
+  const { error } = await supabase
+    .from('custom_requests')
+    .update(updates)
+    .eq('id', requestId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/admin/custom-requests')
+  return { error: null }
+}

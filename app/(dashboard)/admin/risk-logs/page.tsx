@@ -1,37 +1,18 @@
 import type { Metadata } from 'next'
-import { ShieldAlert, MoreHorizontal } from 'lucide-react'
+import { ShieldAlert } from 'lucide-react'
 import { PageContainer } from '@/components/shared/page-container'
 import { PageHeader } from '@/components/shared/page-header'
 import { EmptyState } from '@/components/shared/empty-state'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { formatDate } from '@/lib/utils'
+import { getRiskLogs } from '@/lib/admin/queries'
+import { RiskLogActions } from './risk-log-actions'
 
 export const metadata: Metadata = { title: 'Risk Logs' }
 
-// TODO: add migration for `risk_logs` table, then replace with a real query
 type RiskSeverity = 'low' | 'medium' | 'high' | 'critical'
 type RiskStatus   = 'open' | 'investigating' | 'resolved' | 'dismissed'
-
-type RiskLog = {
-  id: string
-  event_type: string
-  severity: RiskSeverity
-  status: RiskStatus
-  description: string
-  created_at: string
-  resolved_at: string | null
-  actor_name: string | null
-  actor_email: string | null
-}
 
 const severityVariant: Record<RiskSeverity, 'neutral' | 'warning' | 'destructive' | 'loss'> = {
   low:      'neutral',
@@ -45,11 +26,6 @@ const statusVariant: Record<RiskStatus, 'warning' | 'default' | 'profit' | 'seco
   investigating: 'default',
   resolved:      'profit',
   dismissed:     'secondary',
-}
-
-async function getRiskLogs(): Promise<RiskLog[]> {
-  // Stub: risk_logs table migration pending
-  return []
 }
 
 export default async function AdminRiskLogsPage() {
@@ -76,7 +52,6 @@ export default async function AdminRiskLogsPage() {
         }
       />
 
-      {/* Severity stats */}
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {(['critical', 'high', 'medium', 'low'] as RiskSeverity[]).map((s) => (
           <div key={s} className="rounded-lg border border-border bg-card p-3 text-center">
@@ -122,9 +97,9 @@ export default async function AdminRiskLogsPage() {
                     </div>
                     <p className="mt-1 text-sm">{log.description}</p>
                     <div className="mt-1.5 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                      {log.actor_name ?? log.actor_email ? (
+                      {(log.actor_name ?? log.actor_email) && (
                         <span>{log.actor_name ?? log.actor_email}</span>
-                      ) : null}
+                      )}
                       <span>{formatDate(log.created_at)}</span>
                       {log.resolved_at && (
                         <span>Resolved {formatDate(log.resolved_at)}</span>
@@ -132,21 +107,7 @@ export default async function AdminRiskLogsPage() {
                     </div>
                   </div>
 
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Open menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>View details</DropdownMenuItem>
-                      <DropdownMenuItem>Start investigation</DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem>Mark resolved</DropdownMenuItem>
-                      <DropdownMenuItem>Dismiss</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <RiskLogActions logId={log.id} currentStatus={log.status} />
                 </div>
               ))}
             </div>

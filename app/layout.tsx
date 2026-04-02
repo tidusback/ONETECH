@@ -21,6 +21,12 @@ export const metadata: Metadata = {
   description:
     'Trivelox Trading Inc. — Global industrial equipment trading. Premium machinery, genuine spare parts, and certified technical services since 1998.',
   robots: { index: false, follow: false }, // Remove when ready for public indexing
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Trivelox',
+  },
 }
 
 export default function RootLayout({
@@ -38,6 +44,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
         <Providers>{children}</Providers>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js')})}`,
+          }}
+        />
       </body>
     </html>
   )
