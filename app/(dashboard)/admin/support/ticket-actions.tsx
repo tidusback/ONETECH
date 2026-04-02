@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useTransition } from 'react'
 import {
   DropdownMenu,
@@ -11,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { MoreHorizontal } from 'lucide-react'
 import { adminUpdateTicketStatus } from '@/lib/admin/actions'
+import { toast } from 'sonner'
 
 type TicketStatus = 'open' | 'in_progress' | 'waiting_customer' | 'resolved' | 'closed'
 
@@ -21,10 +23,19 @@ interface TicketActionsProps {
 
 export function TicketActions({ ticketId, currentStatus }: TicketActionsProps) {
   const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
 
   function update(status: TicketStatus) {
+    setError(null)
     startTransition(async () => {
-      await adminUpdateTicketStatus(ticketId, status)
+      try {
+        await adminUpdateTicketStatus(ticketId, status)
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to update status'
+        setError(errorMessage)
+        toast.error(`Failed to update ticket ${ticketId}: ${errorMessage}`)
+        console.error('Error updating ticket status:', err)
+      }
     })
   }
 

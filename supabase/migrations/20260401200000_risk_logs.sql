@@ -31,6 +31,7 @@ ALTER TABLE public.risk_logs ENABLE ROW LEVEL SECURITY;
 -- Admins only — risk data is internal
 CREATE POLICY "risk_logs: admin all"
   ON public.risk_logs FOR ALL TO authenticated
-  USING (public.get_my_role() = 'admin');
+  USING (public.get_my_role() = 'admin')
+  WITH CHECK (public.get_my_role() = 'admin');
 
 GRANT SELECT, INSERT, UPDATE ON public.risk_logs TO authenticated;

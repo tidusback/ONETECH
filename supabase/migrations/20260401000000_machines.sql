@@ -40,6 +40,7 @@ CREATE POLICY "machines: own all"
 -- Admins see all
 CREATE POLICY "machines: admin all"
   ON public.machines FOR ALL TO authenticated
-  USING (public.get_my_role() = 'admin');
+  USING (public.get_my_role() = 'admin')
+  WITH CHECK (public.get_my_role() = 'admin');
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.machines TO authenticated;

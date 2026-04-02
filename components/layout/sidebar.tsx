@@ -21,6 +21,7 @@ import {
   MapPin,
   BadgeCheck,
   Users,
+  UserCog,
   Coins,
   Award,
   Brain,
@@ -71,6 +72,7 @@ const adminNavGroups = [
   {
     label: 'People',
     items: [
+      { label: 'All Users',     href: '/admin/users',        icon: UserCog },
       { label: 'Customers',     href: '/admin/customers',    icon: Users },
       { label: 'Technicians',   href: '/admin/technicians',  icon: Wrench },
       { label: 'Applications',  href: '/admin/applications', icon: ClipboardList },
@@ -150,7 +152,7 @@ export function Sidebar({ userRole }: SidebarProps) {
   // -------------------------------------------------------------------------
   if (isAdmin) {
     return (
-      <aside className="flex h-screen w-60 shrink-0 flex-col border-r border-border bg-card">
+      <aside className="hidden md:flex h-screen w-60 shrink-0 flex-col border-r border-border bg-card">
         {/* Logo */}
         <div className="flex h-14 items-center border-b border-border px-5">
           <Link href="/admin" className="flex items-center gap-2.5">
@@ -191,18 +193,22 @@ export function Sidebar({ userRole }: SidebarProps) {
           ))}
         </nav>
 
-        {/* Bottom nav */}
+        {/* Bottom nav — admin-specific profile + settings */}
         <div className="flex flex-col gap-0.5 border-t border-border px-3 py-3">
-          {bottomNavItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={navLinkClass(isActive(item.href))}
-            >
-              <item.icon className="h-4 w-4 shrink-0" />
-              {item.label}
-            </Link>
-          ))}
+          <Link
+            href="/admin/profile"
+            className={navLinkClass(isActive('/admin/profile'))}
+          >
+            <User className="h-4 w-4 shrink-0" />
+            My Profile
+          </Link>
+          <Link
+            href="/settings"
+            className={navLinkClass(isActive('/settings'))}
+          >
+            <Settings className="h-4 w-4 shrink-0" />
+            Settings
+          </Link>
           <button
             onClick={handleSignOut}
             className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"

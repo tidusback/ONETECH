@@ -150,20 +150,24 @@ export async function adminAddJobNote(
 // ---------------------------------------------------------------------------
 
 export async function adminCreatePart(formData: {
-  name:         string
-  part_number:  string
-  description?: string
-  price:        number
+  name:           string
+  part_number:    string
+  description?:   string
+  price:          number
+  stock?:         number | null
+  compatibility?: string | null
 }): Promise<{ error: string | null }> {
   await ensureAdmin()
   const supabase = await createClient()
 
   const { error } = await supabase.from('parts').insert({
-    name:        formData.name.trim(),
-    part_number: formData.part_number.trim(),
-    description: formData.description?.trim() || null,
-    price:       formData.price,
-    is_active:   true,
+    name:          formData.name.trim(),
+    part_number:   formData.part_number.trim(),
+    description:   formData.description?.trim() || null,
+    price:         formData.price,
+    is_active:     true,
+    stock:         formData.stock ?? null,
+    compatibility: formData.compatibility?.trim() || null,
   })
 
   if (error) return { error: error.message }
@@ -173,7 +177,14 @@ export async function adminCreatePart(formData: {
 
 export async function adminUpdatePart(
   id:      string,
-  updates: { name?: string; part_number?: string; description?: string | null; price?: number },
+  updates: {
+    name?:          string
+    part_number?:   string
+    description?:   string | null
+    price?:         number
+    stock?:         number | null
+    compatibility?: string | null
+  },
 ): Promise<{ error: string | null }> {
   await ensureAdmin()
   const supabase = await createClient()
@@ -331,6 +342,239 @@ export async function adminDeleteReview(
 }
 
 // ---------------------------------------------------------------------------
+// Technician Applications
+// ---------------------------------------------------------------------------
+
+type ApplicationStatus = 'pending' | 'under_review' | 'approved' | 'rejected' | 'requires_info'
+type AffiliationLevel  = 'affiliate_technician' | 'certified_technician' | 'certified_partner'
+
+export async function adminUpdateApplicationStatus(
+  applicationId: string,
+  status: ApplicationStatus,
+  opts?: {
+    affiliationLevel?: AffiliationLevel
+    adminNotes?: string | null
+    rejectionReason?: string | null
+  },
+): Promise<{ error: string | null }> {
+  const admin = await ensureAdmin()
+  const supabase = await createClient()
+
+  const updates: Record<string, unknown> = {
+    status,
+    updated_at:   new Date().toISOString(),
+    reviewed_by:  admin.id,
+    reviewed_at:  new Date().toISOString(),
+  }
+  if (opts?.affiliationLevel) updates.affiliation_level = opts.affiliationLevel
+  if (status === 'approved' && opts?.affiliationLevel) {
+    updates.level_updated_at = new Date().toISOString()
+  }
+  if (opts?.adminNotes !== undefined)    updates.admin_notes      = opts.adminNotes ?? null
+  if (opts?.rejectionReason !== undefined) updates.rejection_reason = opts.rejectionReason ?? null
+
+  const { error } = await supabase
+    .from('technician_applications')
+    .update(updates)
+    .eq('id', applicationId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/admin/applications')
+  revalidatePath('/admin/technicians')
+  return { error: null }
+}
+
+export async function adminSetAffiliationLevel(
+  applicationId: string,
+  level: AffiliationLevel,
+): Promise<{ error: string | null }> {
+  await ensureAdmin()
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('technician_applications')
+    .update({ affiliation_level: level, level_updated_at: new Date().toISOString() })
+    .eq('id', applicationId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/admin/applications')
+  revalidatePath('/admin/technicians')
+  return { error: null }
+}
+
+// ---------------------------------------------------------------------------
+// Rewards catalog
+// ---------------------------------------------------------------------------
+
+type RewardCategory = 'voucher' | 'tool' | 'merchandise' | 'cash_equivalent'
+
+export async function adminCreateReward(formData: {
+  title:       string
+  description?: string
+  points_cost: number
+  category:    RewardCategory
+  stock?:      number | null
+}): Promise<{ error: string | null }> {
+  await ensureAdmin()
+  const supabase = await createClient()
+
+  const { error } = await supabase.from('technician_rewards').insert({
+    title:       formData.title.trim(),
+    description: formData.description?.trim() || null,
+    points_cost: formData.points_cost,
+    category:    formData.category,
+    stock:       formData.stock ?? null,
+    is_active:   true,
+  })
+
+  if (error) return { error: error.message }
+  revalidatePath('/admin/rewards')
+  return { error: null }
+}
+
+export async function adminUpdateReward(
+  id:      string,
+  updates: { title?: string; description?: string | null; points_cost?: number; category?: RewardCategory; stock?: number | null },
+): Promise<{ error: string | null }> {
+  await ensureAdmin()
+  const supabase = await createClient()
+
+  const { error } = await supabase.from('technician_rewards').update(updates).eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath('/admin/rewards')
+  return { error: null }
+}
+
+export async function adminToggleRewardActive(
+  id:       string,
+  isActive: boolean,
+): Promise<{ error: string | null }> {
+  await ensureAdmin()
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('technician_rewards')
+    .update({ is_active: isActive })
+    .eq('id', id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/admin/rewards')
+  return { error: null }
+}
+
+// ---------------------------------------------------------------------------
+// Points lifecycle
+// ---------------------------------------------------------------------------
+
+export async function adminReleasePoints(
+  pointsId: string,
+): Promise<{ error: string | null }> {
+  await ensureAdmin()
+  const supabase = await createClient()
+
+  const { data, error } = await supabase.rpc('release_points_entry', {
+    p_points_id: pointsId,
+  })
+
+  if (error) return { error: error.message }
+  const result = data as { error: string | null }
+  if (result?.error) return { error: result.error }
+
+  revalidatePath('/admin/points')
+  return { error: null }
+}
+
+export async function adminVoidPoints(
+  pointsId: string,
+  reason?:  string,
+): Promise<{ error: string | null }> {
+  await ensureAdmin()
+  const supabase = await createClient()
+
+  const { data, error } = await supabase.rpc('void_points_entry', {
+    p_points_id: pointsId,
+    p_reason:    reason ?? null,
+  })
+
+  if (error) return { error: error.message }
+  const result = data as { error: string | null }
+  if (result?.error) return { error: result.error }
+
+  revalidatePath('/admin/points')
+  return { error: null }
+}
+
+export async function adminGrantPoints(
+  technicianId: string,
+  points:       number,
+  reason:       'bonus' | 'adjustment',
+  note?:        string,
+): Promise<{ error: string | null }> {
+  await ensureAdmin()
+  const supabase = await createClient()
+
+  const { data, error } = await supabase.rpc('admin_grant_points', {
+    p_technician_id: technicianId,
+    p_points:        points,
+    p_reason:        reason,
+    p_note:          note ?? null,
+  })
+
+  if (error) return { error: error.message }
+  const result = data as { error: string | null }
+  if (result?.error) return { error: result.error }
+
+  revalidatePath('/admin/points')
+  return { error: null }
+}
+
+// ---------------------------------------------------------------------------
+// Reward redemptions
+// ---------------------------------------------------------------------------
+
+export async function adminFulfillRedemption(
+  redemptionId: string,
+  note?:        string,
+): Promise<{ error: string | null }> {
+  await ensureAdmin()
+  const supabase = await createClient()
+
+  const { data, error } = await supabase.rpc('fulfill_redemption', {
+    p_redemption_id: redemptionId,
+    p_note:          note ?? null,
+  })
+
+  if (error) return { error: error.message }
+  const result = data as { error: string | null }
+  if (result?.error) return { error: result.error }
+
+  revalidatePath('/admin/rewards')
+  revalidatePath('/admin/points')
+  return { error: null }
+}
+
+export async function adminCancelRedemption(
+  redemptionId: string,
+  note?:        string,
+): Promise<{ error: string | null }> {
+  await ensureAdmin()
+  const supabase = await createClient()
+
+  const { data, error } = await supabase.rpc('cancel_redemption', {
+    p_redemption_id: redemptionId,
+    p_note:          note ?? null,
+  })
+
+  if (error) return { error: error.message }
+  const result = data as { error: string | null }
+  if (result?.error) return { error: result.error }
+
+  revalidatePath('/admin/rewards')
+  revalidatePath('/admin/points')
+  return { error: null }
+}
+
+// ---------------------------------------------------------------------------
 // Custom Requests
 // ---------------------------------------------------------------------------
 
@@ -352,5 +596,28 @@ export async function adminUpdateCustomRequestStatus(
 
   if (error) return { error: error.message }
   revalidatePath('/admin/custom-requests')
+  return { error: null }
+}
+
+// ---------------------------------------------------------------------------
+// Admin profile
+// ---------------------------------------------------------------------------
+
+export async function adminUpdateProfile(updates: {
+  full_name: string
+}): Promise<{ error: string | null }> {
+  const admin = await ensureAdmin()
+  const supabase = await createClient()
+
+  const name = updates.full_name.trim()
+  if (!name) return { error: 'Full name cannot be empty.' }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ full_name: name, updated_at: new Date().toISOString() })
+    .eq('id', admin.id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/admin/profile')
   return { error: null }
 }

@@ -1,14 +1,9 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
 import { Loader2, CheckCircle2, XCircle, ChevronDown, PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import {
-  releasePointsEntry,
-  voidPointsEntry,
-  adminGrantPoints,
-} from '@/lib/technician/actions'
+import { adminReleasePoints, adminVoidPoints, adminGrantPoints } from '@/lib/admin/actions'
 import type { ApprovedTechnicianProfile } from '@/lib/technician/queries'
 
 // ---------------------------------------------------------------------------
@@ -25,7 +20,6 @@ export function PointsEntryActions({ pointsId }: PointsEntryActionsProps) {
   const [voidReason, setVoidReason] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState<'released' | 'voided' | null>(null)
-  const router = useRouter()
 
   if (done === 'released') {
     return (
@@ -45,21 +39,19 @@ export function PointsEntryActions({ pointsId }: PointsEntryActionsProps) {
   function handleRelease() {
     setError(null)
     startTransition(async () => {
-      const result = await releasePointsEntry(pointsId)
+      const result = await adminReleasePoints(pointsId)
       if (result.error) { setError(result.error); return }
       setDone('released')
-      router.refresh()
     })
   }
 
   function handleVoidConfirm() {
     setError(null)
     startTransition(async () => {
-      const result = await voidPointsEntry(pointsId, voidReason.trim() || undefined)
+      const result = await adminVoidPoints(pointsId, voidReason.trim() || undefined)
       if (result.error) { setError(result.error); return }
       setDone('voided')
       setVoiding(false)
-      router.refresh()
     })
   }
 
@@ -147,7 +139,6 @@ export function GrantPointsForm({ technicians }: GrantPointsFormProps) {
   const [note, setNote] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-  const router = useRouter()
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -164,7 +155,6 @@ export function GrantPointsForm({ technicians }: GrantPointsFormProps) {
       setTechnicianId('')
       setPoints('')
       setNote('')
-      router.refresh()
     })
   }
 

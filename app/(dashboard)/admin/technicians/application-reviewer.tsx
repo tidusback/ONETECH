@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronDown, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { updateApplicationStatus } from '@/lib/technician/actions'
+import { adminUpdateApplicationStatus } from '@/lib/admin/actions'
 import type { ApplicationStatus } from '@/lib/technician/queries'
 import { APPLICATION_STATUS_CONFIG } from '@/lib/validations/onboarding'
 
@@ -38,9 +38,9 @@ export function ApplicationReviewer({
   function handleUpdate(status: ApplicationStatus) {
     setError(null)
     startTransition(async () => {
-      const result = await updateApplicationStatus(applicationId, status, {
-        adminNotes: notes || undefined,
-        rejectionReason: status === 'rejected' ? (rejectionReason || undefined) : undefined,
+      const result = await adminUpdateApplicationStatus(applicationId, status, {
+        adminNotes:      notes || null,
+        rejectionReason: status === 'rejected' ? (rejectionReason || null) : null,
       })
       if (result.error) {
         setError(result.error)

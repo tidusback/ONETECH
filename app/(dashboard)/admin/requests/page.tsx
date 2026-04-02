@@ -1,9 +1,6 @@
 import type { Metadata } from 'next'
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Package, ArrowRight } from 'lucide-react'
-import { requireOnboardingComplete } from '@/lib/auth/guards'
-import { getProfile } from '@/lib/auth/utils'
 import { getAllRequests } from '@/lib/orders/queries'
 import { PageContainer } from '@/components/shared/page-container'
 import { PageHeader } from '@/components/shared/page-header'
@@ -18,11 +15,6 @@ import { formatDate } from '@/lib/utils'
 export const metadata: Metadata = { title: 'Admin — All Requests' }
 
 export default async function AdminRequestsPage() {
-  const user = await requireOnboardingComplete()
-  const profile = await getProfile(user.id)
-
-  if (profile?.role !== 'admin') redirect('/dashboard')
-
   const requests = await getAllRequests()
 
   // Group counts by status for the summary strip

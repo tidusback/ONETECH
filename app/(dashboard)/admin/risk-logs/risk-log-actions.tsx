@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useTransition } from 'react'
 import {
   DropdownMenu,
@@ -11,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { MoreHorizontal } from 'lucide-react'
 import { adminUpdateRiskStatus } from '@/lib/admin/actions'
+import { toast } from 'sonner'
 
 type RiskStatus = 'open' | 'investigating' | 'resolved' | 'dismissed'
 
@@ -21,10 +23,19 @@ interface RiskLogActionsProps {
 
 export function RiskLogActions({ logId, currentStatus }: RiskLogActionsProps) {
   const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
 
   function update(status: RiskStatus) {
+    setError(null)
     startTransition(async () => {
-      await adminUpdateRiskStatus(logId, status)
+      try {
+        await adminUpdateRiskStatus(logId, status)
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to update status'
+        setError(errorMessage)
+        toast.error(`Failed to update risk log: ${errorMessage}`)
+        console.error('Error updating risk log status:', err)
+      }
     })
   }
 

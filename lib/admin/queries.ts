@@ -36,6 +36,29 @@ export interface CustomerDetail {
 }
 
 // ---------------------------------------------------------------------------
+// All users (unified view — all roles)
+// ---------------------------------------------------------------------------
+
+export interface AdminUser {
+  id:                      string
+  email:                   string
+  full_name:               string | null
+  role:                    'customer' | 'technician' | 'admin'
+  onboarding_completed_at: string | null
+  created_at:              string
+}
+
+export async function getAllProfiles(): Promise<AdminUser[]> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('profiles')
+    .select('id, email, full_name, role, onboarding_completed_at, created_at')
+    .order('created_at', { ascending: false })
+    .limit(1000)
+  return (data ?? []) as AdminUser[]
+}
+
+// ---------------------------------------------------------------------------
 // Leads
 // ---------------------------------------------------------------------------
 

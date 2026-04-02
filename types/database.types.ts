@@ -176,30 +176,36 @@ export interface Database {
 
       parts: {
         Row: {
-          id:          string
-          name:        string
-          part_number: string
-          description: string | null
-          price:       number
-          is_active:   boolean
-          created_at:  string
+          id:            string
+          name:          string
+          part_number:   string
+          description:   string | null
+          price:         number
+          is_active:     boolean
+          stock:         number | null   // NULL = not tracked; 0 = out of stock
+          compatibility: string | null   // comma-separated compatible models
+          created_at:    string
         }
         Insert: {
-          id?:          string
-          name:         string
-          part_number:  string
-          description?: string | null
-          price:        number
-          is_active?:   boolean
-          created_at?:  string
+          id?:            string
+          name:           string
+          part_number:    string
+          description?:   string | null
+          price:          number
+          is_active?:     boolean
+          stock?:         number | null
+          compatibility?: string | null
+          created_at?:    string
         }
         Update: {
-          id?:          string
-          name?:        string
-          part_number?: string
-          description?: string | null
-          price?:       number
-          is_active?:   boolean
+          id?:            string
+          name?:          string
+          part_number?:   string
+          description?:   string | null
+          price?:         number
+          is_active?:     boolean
+          stock?:         number | null
+          compatibility?: string | null
         }
         Relationships: []
       }

@@ -1,11 +1,9 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
 import { Loader2, CheckCircle2, XCircle, ChevronDown, ToggleLeft, ToggleRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { fulfillRedemption, cancelRedemption } from '@/lib/technician/actions'
-import { createClient } from '@/lib/supabase/client'
+import { adminFulfillRedemption, adminCancelRedemption, adminToggleRewardActive } from '@/lib/admin/actions'
 
 // ---------------------------------------------------------------------------
 // Fulfill / Cancel a redemption
@@ -21,7 +19,6 @@ export function RedemptionActions({ redemptionId }: RedemptionActionsProps) {
   const [cancelNote, setCancelNote] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState<'fulfilled' | 'cancelled' | null>(null)
-  const router = useRouter()
 
   if (done === 'fulfilled') {
     return (
@@ -41,21 +38,19 @@ export function RedemptionActions({ redemptionId }: RedemptionActionsProps) {
   function handleFulfill() {
     setError(null)
     startTransition(async () => {
-      const result = await fulfillRedemption(redemptionId)
+      const result = await adminFulfillRedemption(redemptionId)
       if (result.error) { setError(result.error); return }
       setDone('fulfilled')
-      router.refresh()
     })
   }
 
   function handleCancelConfirm() {
     setError(null)
     startTransition(async () => {
-      const result = await cancelRedemption(redemptionId, cancelNote.trim() || undefined)
+      const result = await adminCancelRedemption(redemptionId, cancelNote.trim() || undefined)
       if (result.error) { setError(result.error); return }
       setDone('cancelled')
       setCancelling(false)
-      router.refresh()
     })
   }
 
@@ -128,32 +123,30 @@ export function RedemptionActions({ redemptionId }: RedemptionActionsProps) {
 }
 
 // ---------------------------------------------------------------------------
-// Toggle reward active/inactive
+// Toggle reward active/inactive — calls server action, not browser client
 // ---------------------------------------------------------------------------
 
 interface RewardToggleProps {
   rewardId: string
   isActive: boolean
-  title: string
+  title:    string
 }
 
 export function RewardToggle({ rewardId, isActive, title }: RewardToggleProps) {
   const [isPending, startTransition] = useTransition()
   const [active, setActive] = useState(isActive)
   const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
 
   function handleToggle() {
     setError(null)
+    const next = !active
+    setActive(next) // optimistic
     startTransition(async () => {
-      const supabase = createClient()
-      const { error: err } = await supabase
-        .from('technician_rewards')
-        .update({ is_active: !active })
-        .eq('id', rewardId)
-      if (err) { setError(err.message); return }
-      setActive((v) => !v)
-      router.refresh()
+      const result = await adminToggleRewardActive(rewardId, next)
+      if (result.error) {
+        setActive(!next) // revert on error
+        setError(result.error)
+      }
     })
   }
 

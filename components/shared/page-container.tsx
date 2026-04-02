@@ -1,10 +1,10 @@
 import { cn } from '@/lib/utils'
 
 const sizeMap = {
-  narrow: 'max-w-3xl',
+  narrow:  'max-w-3xl',
   default: 'max-w-6xl',
-  wide: 'max-w-7xl',
-  full: 'max-w-full',
+  wide:    'max-w-7xl',
+  full:    'max-w-full',
 } as const
 
 interface PageContainerProps {
@@ -19,7 +19,7 @@ export function PageContainer({
   size = 'default',
 }: PageContainerProps) {
   return (
-    <div className={cn('mx-auto w-full px-6 py-8', sizeMap[size], className)}>
+    <div className={cn('mx-auto w-full px-4 py-5 md:px-6 md:py-8', sizeMap[size], className)}>
       {children}
     </div>
   )

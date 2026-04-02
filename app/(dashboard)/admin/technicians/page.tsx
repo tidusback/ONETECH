@@ -1,8 +1,6 @@
 import type { Metadata } from 'next'
-import { redirect } from 'next/navigation'
+import { Suspense } from 'react'
 import { Users, MapPin, Wrench, Clock, ShieldCheck } from 'lucide-react'
-import { requireOnboardingComplete } from '@/lib/auth/guards'
-import { getProfile } from '@/lib/auth/utils'
 import {
   getAllApplications,
   getApplicationCounts,
@@ -17,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
+import { FilterBar } from '@/components/admin/filter-bar'
 import { ApplicationReviewer } from './application-reviewer'
 import { LevelRequestActions, AdminSetLevel } from './level-actions'
 import { AffiliateBadge } from '@/components/technician/affiliation-badge'
@@ -43,18 +42,39 @@ const LEVEL_LABEL: Record<string, string> = {
   certified_partner:    'Partner',
 }
 
-export default async function AdminTechniciansPage() {
-  const user    = await requireOnboardingComplete()
-  const profile = await getProfile(user.id)
+const APP_STATUS_OPTIONS = [
+  { value: 'pending',       label: 'Pending' },
+  { value: 'under_review',  label: 'Under Review' },
+  { value: 'requires_info', label: 'Requires Info' },
+  { value: 'approved',      label: 'Approved' },
+  { value: 'rejected',      label: 'Rejected' },
+]
 
-  if (profile?.role !== 'admin') redirect('/dashboard')
-
+export default async function AdminTechniciansPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ search?: string; status?: string }>
+}) {
+  const sp = await searchParams
   const [applications, counts, pendingLevelReqs, approvedTechs] = await Promise.all([
     getAllApplications(),
     getApplicationCounts(),
     getPendingLevelRequests(),
     getApprovedTechniciansWithLevel(),
   ])
+
+  const filteredApps = applications.filter((app) => {
+    if (sp.status && app.status !== sp.status) return false
+    if (sp.search) {
+      const q = sp.search.toLowerCase()
+      if (
+        !(app.full_name ?? '').toLowerCase().includes(q) &&
+        !(app.profiles?.email ?? '').toLowerCase().includes(q)
+      )
+        return false
+    }
+    return true
+  })
 
   const actionableCount = (counts['pending'] ?? 0) + (counts['requires_info'] ?? 0)
 
@@ -219,27 +239,39 @@ export default async function AdminTechniciansPage() {
       {/* All applications                                                    */}
       {/* ------------------------------------------------------------------ */}
       <Card>
-        <CardHeader className="pb-0 pt-5">
-          <CardTitle className="text-sm font-medium">
+        <CardHeader className="flex-row flex-wrap items-center justify-between gap-3 pb-0 pt-5">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
             All Applications
-            {applications.length > 0 && (
-              <span className="ml-2 font-mono text-xs font-normal text-muted-foreground">
-                {applications.length} total
+            {filteredApps.length > 0 && (
+              <span className="font-mono text-xs font-normal text-muted-foreground">
+                {filteredApps.length}
+                {applications.length !== filteredApps.length ? ` of ${applications.length}` : ''}
               </span>
             )}
           </CardTitle>
+          <Suspense>
+            <FilterBar
+              searchPlaceholder="Search by name or email…"
+              statusOptions={APP_STATUS_OPTIONS}
+              className="w-auto"
+            />
+          </Suspense>
         </CardHeader>
         <CardContent className="mt-4 p-0 pb-1">
-          {applications.length === 0 ? (
+          {filteredApps.length === 0 ? (
             <EmptyState
               icon={Users}
               title="No applications yet"
-              description="Technician applications will appear here once submitted."
+              description={
+                applications.length === 0
+                  ? 'Technician applications will appear here once submitted.'
+                  : 'No applications match the current filters.'
+              }
               className="py-12"
             />
           ) : (
             <div className="divide-y divide-border">
-              {applications.map((app) => (
+              {filteredApps.map((app) => (
                 <div
                   key={app.id}
                   className="flex flex-col gap-4 px-6 py-5 sm:flex-row sm:items-start"

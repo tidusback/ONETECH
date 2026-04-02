@@ -131,7 +131,7 @@ export default async function JobsPage() {
             </span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="mt-4 p-0 pb-1">
+        <CardContent className="mt-4 overflow-x-auto p-0 pb-1">
           <Table>
             <TableHeader>
               <TableRow>

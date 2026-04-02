@@ -18,7 +18,7 @@ CREATE TABLE public.support_tickets (
   priority       TEXT        NOT NULL DEFAULT 'medium'
                    CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
   category       TEXT,
-  assigned_to    UUID        REFERENCES public.profiles(id),
+  assigned_to    UUID        REFERENCES public.profiles(id) ON DELETE SET NULL,
   resolution     TEXT,
   created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -48,6 +48,7 @@ CREATE POLICY "support_tickets: own insert"
 -- Admins manage all tickets
 CREATE POLICY "support_tickets: admin all"
   ON public.support_tickets FOR ALL TO authenticated
-  USING (public.get_my_role() = 'admin');
+  USING (public.get_my_role() = 'admin')
+  WITH CHECK (public.get_my_role() = 'admin');
 
 GRANT SELECT, INSERT, UPDATE ON public.support_tickets TO authenticated;

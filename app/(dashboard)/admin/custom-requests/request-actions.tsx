@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useTransition } from 'react'
 import {
   DropdownMenu,
@@ -11,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { MoreHorizontal } from 'lucide-react'
 import { adminUpdateCustomRequestStatus } from '@/lib/admin/actions'
+import { toast } from 'sonner'
 
 type CustomRequestStatus = 'new' | 'reviewing' | 'quoted' | 'accepted' | 'declined' | 'completed'
 
@@ -21,10 +23,19 @@ interface RequestActionsProps {
 
 export function RequestActions({ requestId, currentStatus }: RequestActionsProps) {
   const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
 
   function update(status: CustomRequestStatus) {
+    setError(null)
     startTransition(async () => {
-      await adminUpdateCustomRequestStatus(requestId, status)
+      try {
+        await adminUpdateCustomRequestStatus(requestId, status)
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to update status'
+        setError(errorMessage)
+        toast.error(`Failed to update request: ${errorMessage}`)
+        console.error('Error updating request status:', err)
+      }
     })
   }
 
@@ -57,14 +68,16 @@ export function RequestActions({ requestId, currentStatus }: RequestActionsProps
             Mark completed
           </DropdownMenuItem>
         )}
-        <DropdownMenuSeparator />
         {currentStatus !== 'declined' && currentStatus !== 'completed' && (
-          <DropdownMenuItem
-            onClick={() => update('declined')}
-            className="text-destructive focus:text-destructive"
-          >
-            Decline
-          </DropdownMenuItem>
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => update('declined')}
+              className="text-destructive focus:text-destructive"
+            >
+              Decline
+            </DropdownMenuItem>
+          </>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

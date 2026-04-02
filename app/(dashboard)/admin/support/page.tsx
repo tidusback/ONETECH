@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { LifeBuoy } from 'lucide-react'
 import { PageContainer } from '@/components/shared/page-container'
 import { PageHeader } from '@/components/shared/page-header'
 import { EmptyState } from '@/components/shared/empty-state'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { FilterBar } from '@/components/admin/filter-bar'
 import { formatDate } from '@/lib/utils'
 import { getSupportTickets } from '@/lib/admin/queries'
 import { TicketActions } from './ticket-actions'
@@ -13,6 +15,21 @@ export const metadata: Metadata = { title: 'Support Tickets' }
 
 type TicketStatus   = 'open' | 'in_progress' | 'waiting_customer' | 'resolved' | 'closed'
 type TicketPriority = 'low' | 'medium' | 'high' | 'urgent'
+
+const STATUS_OPTIONS = [
+  { value: 'open',             label: 'Open' },
+  { value: 'in_progress',      label: 'In Progress' },
+  { value: 'waiting_customer', label: 'Waiting Customer' },
+  { value: 'resolved',         label: 'Resolved' },
+  { value: 'closed',           label: 'Closed' },
+]
+
+const PRIORITY_OPTIONS = [
+  { value: 'urgent', label: 'Urgent' },
+  { value: 'high',   label: 'High' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'low',    label: 'Low' },
+]
 
 const statusVariant: Record<TicketStatus, 'warning' | 'default' | 'neutral' | 'profit' | 'secondary'> = {
   open:             'warning',
@@ -29,8 +46,28 @@ const priorityVariant: Record<TicketPriority, 'destructive' | 'warning' | 'neutr
   low:    'secondary',
 }
 
-export default async function AdminSupportPage() {
+export default async function AdminSupportPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ search?: string; status?: string; priority?: string }>
+}) {
+  const sp = await searchParams
   const tickets = await getSupportTickets()
+
+  const filtered = tickets.filter((t) => {
+    if (sp.status && t.status !== sp.status) return false
+    if (sp.priority && t.priority !== sp.priority) return false
+    if (sp.search) {
+      const q = sp.search.toLowerCase()
+      if (
+        !t.subject.toLowerCase().includes(q) &&
+        !(t.customer_name ?? '').toLowerCase().includes(q) &&
+        !t.customer_email.toLowerCase().includes(q)
+      )
+        return false
+    }
+    return true
+  })
 
   const counts = tickets.reduce<Record<string, number>>((acc, t) => {
     acc[t.status] = (acc[t.status] ?? 0) + 1
@@ -67,27 +104,42 @@ export default async function AdminSupportPage() {
       )}
 
       <Card>
-        <CardHeader className="pb-0 pt-5">
+        <CardHeader className="flex-row flex-wrap items-center justify-between gap-3 pb-0 pt-5">
           <CardTitle className="flex items-center gap-2 text-sm font-medium">
             All tickets
-            {tickets.length > 0 && (
+            {filtered.length > 0 && (
               <span className="font-mono text-xs font-normal text-muted-foreground">
-                {tickets.length} total
+                {filtered.length}
+                {tickets.length !== filtered.length ? ` of ${tickets.length}` : ''}
               </span>
             )}
           </CardTitle>
+          <Suspense>
+            <FilterBar
+              searchPlaceholder="Search by subject or customer…"
+              statusOptions={STATUS_OPTIONS}
+              extraFilters={[
+                { param: 'priority', placeholder: 'All priorities', options: PRIORITY_OPTIONS },
+              ]}
+              className="w-auto"
+            />
+          </Suspense>
         </CardHeader>
         <CardContent className="mt-4 p-0 pb-1">
-          {tickets.length === 0 ? (
+          {filtered.length === 0 ? (
             <EmptyState
               icon={LifeBuoy}
               title="No support tickets"
-              description="Support tickets submitted by customers will appear here."
+              description={
+                tickets.length === 0
+                  ? 'Support tickets submitted by customers will appear here.'
+                  : 'No tickets match the current filters.'
+              }
               className="py-12"
             />
           ) : (
             <div className="divide-y divide-border">
-              {tickets.map((ticket) => (
+              {filtered.map((ticket) => (
                 <div
                   key={ticket.id}
                   className="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center"

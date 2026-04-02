@@ -15,13 +15,6 @@ export interface Profile {
   updated_at: string
 }
 
-export interface NavItem {
-  label: string
-  href: string
-  icon: React.ComponentType<{ className?: string }>
-  badge?: number
-}
-
 // Generic server action / async operation result
 export type ActionResult<T = void> =
   | { success: true; data: T }

@@ -14,6 +14,7 @@ import {
   Brain,
   ShieldAlert,
   ArrowRight,
+  UserCog,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { PageContainer } from '@/components/shared/page-container'
@@ -43,6 +44,7 @@ const sections = [
   {
     group: 'People',
     items: [
+      { label: 'All Users',    href: '/admin/users',        icon: UserCog,      description: 'Every registered account across all roles' },
       { label: 'Customers',    href: '/admin/customers',    icon: Users,        description: 'Registered customer accounts' },
       { label: 'Technicians',  href: '/admin/technicians',  icon: Wrench,       description: 'Active technician profiles & levels' },
       { label: 'Applications', href: '/admin/applications', icon: ClipboardList, description: 'Pending technician onboarding' },
