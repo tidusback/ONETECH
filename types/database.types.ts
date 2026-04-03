@@ -845,6 +845,215 @@ export interface Database {
       }
 
       // -----------------------------------------------------------------------
+      // Machines table
+      // -----------------------------------------------------------------------
+
+      machines: {
+        Row: {
+          id:           string
+          user_id:      string
+          name:         string
+          brand:        string | null
+          model:        string | null
+          serial_number: string | null
+          year:         number | null
+          notes:        string | null
+          created_at:   string
+          updated_at:   string
+        }
+        Insert: {
+          id?:           string
+          user_id:       string
+          name:          string
+          brand?:        string | null
+          model?:        string | null
+          serial_number?: string | null
+          year?:         number | null
+          notes?:        string | null
+          created_at?:   string
+          updated_at?:   string
+        }
+        Update: {
+          id?:           string
+          user_id?:      string
+          name?:         string
+          brand?:        string | null
+          model?:        string | null
+          serial_number?: string | null
+          year?:         number | null
+          notes?:        string | null
+          updated_at?:   string
+        }
+        Relationships: []
+      }
+
+      // -----------------------------------------------------------------------
+      // Support tickets table
+      // -----------------------------------------------------------------------
+
+      support_tickets: {
+        Row: {
+          id:             string
+          ticket_number:  string
+          user_id:        string
+          subject:        string
+          description:    string | null
+          status:         'open' | 'in_progress' | 'waiting_customer' | 'resolved' | 'closed'
+          priority:       'low' | 'medium' | 'high' | 'urgent'
+          assigned_to:    string | null
+          resolved_at:    string | null
+          created_at:     string
+          updated_at:     string
+        }
+        Insert: {
+          id?:            string
+          ticket_number?: string
+          user_id:        string
+          subject:        string
+          description?:   string | null
+          status?:        'open' | 'in_progress' | 'waiting_customer' | 'resolved' | 'closed'
+          priority?:      'low' | 'medium' | 'high' | 'urgent'
+          assigned_to?:   string | null
+          resolved_at?:   string | null
+          created_at?:    string
+          updated_at?:    string
+        }
+        Update: {
+          id?:            string
+          ticket_number?: string
+          user_id?:       string
+          subject?:       string
+          description?:   string | null
+          status?:        'open' | 'in_progress' | 'waiting_customer' | 'resolved' | 'closed'
+          priority?:      'low' | 'medium' | 'high' | 'urgent'
+          assigned_to?:   string | null
+          resolved_at?:   string | null
+          updated_at?:    string
+        }
+        Relationships: []
+      }
+
+      // -----------------------------------------------------------------------
+      // Risk logs table
+      // -----------------------------------------------------------------------
+
+      risk_logs: {
+        Row: {
+          id:           string
+          event_type:   string
+          severity:     'low' | 'medium' | 'high' | 'critical'
+          status:       'open' | 'investigating' | 'resolved' | 'dismissed'
+          description:  string
+          actor_id:     string | null
+          resolved_at:  string | null
+          resolved_by:  string | null
+          created_at:   string
+        }
+        Insert: {
+          id?:          string
+          event_type:   string
+          severity?:    'low' | 'medium' | 'high' | 'critical'
+          status?:      'open' | 'investigating' | 'resolved' | 'dismissed'
+          description:  string
+          actor_id?:    string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          created_at?:  string
+        }
+        Update: {
+          id?:          string
+          event_type?:  string
+          severity?:    'low' | 'medium' | 'high' | 'critical'
+          status?:      'open' | 'investigating' | 'resolved' | 'dismissed'
+          description?: string
+          actor_id?:    string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Relationships: []
+      }
+
+      // -----------------------------------------------------------------------
+      // Reviews table
+      // -----------------------------------------------------------------------
+
+      reviews: {
+        Row: {
+          id:            string
+          user_id:       string
+          technician_id: string | null
+          job_id:        string | null
+          rating:        number
+          comment:       string | null
+          is_published:  boolean
+          created_at:    string
+        }
+        Insert: {
+          id?:            string
+          user_id:        string
+          technician_id?: string | null
+          job_id?:        string | null
+          rating:         number
+          comment?:       string | null
+          is_published?:  boolean
+          created_at?:    string
+        }
+        Update: {
+          id?:            string
+          user_id?:       string
+          technician_id?: string | null
+          job_id?:        string | null
+          rating?:        number
+          comment?:       string | null
+          is_published?:  boolean
+        }
+        Relationships: []
+      }
+
+      // -----------------------------------------------------------------------
+      // Custom requests table
+      // -----------------------------------------------------------------------
+
+      custom_requests: {
+        Row: {
+          id:              string
+          request_number:  string
+          user_id:         string
+          title:           string
+          description:     string | null
+          status:          'new' | 'reviewing' | 'quoted' | 'accepted' | 'declined' | 'completed'
+          budget:          number | null
+          admin_notes:     string | null
+          created_at:      string
+          updated_at:      string
+        }
+        Insert: {
+          id?:             string
+          request_number?: string
+          user_id:         string
+          title:           string
+          description?:    string | null
+          status?:         'new' | 'reviewing' | 'quoted' | 'accepted' | 'declined' | 'completed'
+          budget?:         number | null
+          admin_notes?:    string | null
+          created_at?:     string
+          updated_at?:     string
+        }
+        Update: {
+          id?:             string
+          request_number?: string
+          user_id?:        string
+          title?:          string
+          description?:    string | null
+          status?:         'new' | 'reviewing' | 'quoted' | 'accepted' | 'declined' | 'completed'
+          budget?:         number | null
+          admin_notes?:    string | null
+          updated_at?:     string
+        }
+        Relationships: []
+      }
+
+      // -----------------------------------------------------------------------
       // Affiliation level tables
       // -----------------------------------------------------------------------
 

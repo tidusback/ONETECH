@@ -202,7 +202,7 @@ export function MobileNav({ userRole, displayName }: MobileNavProps) {
               <div className="relative">
                 <tab.icon className={cn('h-5 w-5', active && 'text-primary')} />
                 {/* Cart badge for customer Parts Request */}
-                {tab.href === '/request' && itemCount > 0 && (
+                {(tab.href as string) === '/request' && itemCount > 0 && (
                   <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 font-mono text-[9px] font-bold text-primary-foreground">
                     {itemCount}
                   </span>

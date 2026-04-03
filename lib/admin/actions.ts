@@ -493,7 +493,7 @@ export async function adminVoidPoints(
 
   const { data, error } = await supabase.rpc('void_points_entry', {
     p_points_id: pointsId,
-    p_reason:    reason ?? null,
+    p_reason:    reason ?? undefined,
   })
 
   if (error) return { error: error.message }
@@ -517,7 +517,7 @@ export async function adminGrantPoints(
     p_technician_id: technicianId,
     p_points:        points,
     p_reason:        reason,
-    p_note:          note ?? null,
+    p_note:          note ?? undefined,
   })
 
   if (error) return { error: error.message }
@@ -541,7 +541,7 @@ export async function adminFulfillRedemption(
 
   const { data, error } = await supabase.rpc('fulfill_redemption', {
     p_redemption_id: redemptionId,
-    p_note:          note ?? null,
+    p_note:          note ?? undefined,
   })
 
   if (error) return { error: error.message }
@@ -562,7 +562,7 @@ export async function adminCancelRedemption(
 
   const { data, error } = await supabase.rpc('cancel_redemption', {
     p_redemption_id: redemptionId,
-    p_note:          note ?? null,
+    p_note:          note ?? undefined,
   })
 
   if (error) return { error: error.message }
