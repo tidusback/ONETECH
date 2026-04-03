@@ -15,6 +15,7 @@ import {
   ShieldAlert,
   ArrowRight,
   UserCog,
+  User,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { PageContainer } from '@/components/shared/page-container'
@@ -72,6 +73,7 @@ const sections = [
     items: [
       { label: 'Diagnosis Rules', href: '/admin/diagnosis',  icon: Brain,       description: 'Issue categories & decision logic' },
       { label: 'Risk Logs',       href: '/admin/risk-logs',  icon: ShieldAlert, description: 'Flagged events & audit trail' },
+      { label: 'My Profile',      href: '/admin/profile',    icon: User,        description: 'Your account details & platform snapshot' },
     ],
   },
 ]
