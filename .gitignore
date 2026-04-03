@@ -1,6 +1,16 @@
-DS_Store
+# Build output
+.next/
+out/
+
+# Dependencies
 node_modules/
-node_modules/
-.DS_Store
+
+# Environment variables
 .env.local
 .env*.local
+
+# macOS
+.DS_Store
+
+# TypeScript
+tsconfig.tsbuildinfo
